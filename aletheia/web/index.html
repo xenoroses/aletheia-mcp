@@ -3,21 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aletheia-MCP | Security Dashboard</title>
+    <title>Aletheia AI | Premium Agent Security Gateway</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #0B0F19;
-            --bg-surface: rgba(22, 28, 45, 0.4);
-            --border-glow: rgba(59, 130, 246, 0.2);
-            --primary: #3B82F6;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --text-main: #F3F4F6;
-            --text-muted: #9CA3AF;
+            --bg-page:           #F7F5F2;   /* warm off-white — body/page background */
+            --bg-sidebar:        #EFEDE8;   /* slightly darker warm gray — sidebar */
+            --bg-sidebar-hover:  #E5E2DC;   /* subtle warm hover on sidebar items */
+            --bg-sidebar-active: #E0DDD7;   /* selected nav item background */
+            --bg-card:           #FFFFFF;   /* pure white — all task cards */
+            --bg-input:          #FFFFFF;   /* form inputs */
+            --bg-drawer:         #FFFFFF;   /* new task slide-in panel */
+
+            --border-page:       #E5E2DC;   /* dividers, sidebar border */
+            --border-card:       #E8E6E1;   /* task card outline */
+            --border-input:      #D4D1CB;   /* input resting state */
+            --border-input-focus:#A8A49E;   /* input focused state */
+
+            --accent:            #CF6146;   /* Claude's terracotta — buttons, active states */
+            --accent-hover:      #BA5238;
+
+            --text-primary:      #1A1A18;   /* near-black with warm tint — titles, headings */
+            --text-secondary:    #6B6860;   /* warm medium gray — descriptions, meta */
+            --text-tertiary:     #9B9893;   /* muted — placeholders, timestamps */
+            --text-on-accent:    #FFFFFF;
+
+            --priority-critical: #DC2626;
+            --priority-high:     #D97706;
+            --priority-medium:   #2563EB;
+            --priority-low:      #16A34A;
+
+            --success:           #16A34A;
+            --warning:           #D97706;
+            --danger:            #DC2626;
+            --overdue-bg:        rgba(220, 38, 38, 0.04);
+            --soon-bg:           rgba(217, 119, 6, 0.05);
+
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         * {
@@ -27,315 +51,761 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(at 10% 20%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-                radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            overflow: hidden;
+            line-height: 1.6;
+            letter-spacing: normal;
         }
 
-        header {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* Webkit scrollbars styling */
+        ::-webkit-scrollbar        { width: 5px }
+        ::-webkit-scrollbar-track  { background: transparent }
+        ::-webkit-scrollbar-thumb  { background: #D4D1CB; border-radius: 4px }
+        ::-webkit-scrollbar-thumb:hover { background: #A8A49E }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-page);
             display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            padding: 16px 12px;
+        }
+
+        .sidebar-header {
+            padding: 4px 12px 12px;
+            border-bottom: 1px solid var(--border-page);
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(12px);
-            background: rgba(11, 15, 25, 0.6);
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--primary), var(--success));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .badge-status {
-            font-size: 0.8rem;
+        .sidebar-logo {
+            font-size: 16px;
             font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-
-        main {
-            flex: 1;
-            max-width: 1200px;
-            width: 100%;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        @media (max-width: 900px) {
-            main {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 1.75rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            border-color: var(--border-glow);
-            box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.08);
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        textarea {
-            width: 100%;
-            height: 120px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 1rem;
-            color: var(--text-main);
-            font-family: inherit;
-            font-size: 0.95rem;
-            resize: none;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        textarea:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-run {
-            background: linear-gradient(135deg, var(--primary), #2563EB);
-            color: white;
+        .btn-new-chat {
+            margin: 16px 0;
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--text-on-accent);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             border: none;
-            border-radius: 10px;
-            padding: 0.85rem;
-            font-weight: 600;
-            font-size: 1rem;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(207, 97, 70, 0.3);
+            transition: background 150ms ease, box-shadow 150ms ease;
         }
 
-        .btn-run:hover {
-            opacity: 0.9;
+        .btn-new-chat:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 2px 6px rgba(207, 97, 70, 0.4);
         }
 
-        .btn-run:active {
+        .btn-new-chat:active {
             transform: scale(0.98);
         }
 
-        .btn-run:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* Flow Logs / Terminal styling */
-        .console {
-            background: rgba(5, 7, 12, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 1.25rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            height: 480px;
+        .history-list {
+            flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+            gap: 4px;
         }
 
-        .log-entry {
-            border-left: 2px solid var(--text-muted);
-            padding-left: 0.75rem;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .log-worker {
-            border-color: var(--primary);
-        }
-
-        .log-supervisor {
-            border-color: var(--warning);
-        }
-
-        .log-sandbox {
-            border-color: var(--success);
-        }
-
-        .log-error {
-            border-color: var(--danger);
-        }
-
-        .log-header {
+        /* Views heading in sidebar */
+        .history-list::before {
+            content: "SESSIONS";
+            font-size: 11px;
             font-weight: 600;
-            margin-bottom: 0.25rem;
-            display: flex;
-            justify-content: space-between;
+            color: var(--text-tertiary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin: 16px 12px 6px;
+            display: block;
         }
 
-        .log-worker .log-header { color: var(--primary); }
-        .log-supervisor .log-header { color: var(--warning); }
-        .log-sandbox .log-header { color: var(--success); }
-        .log-error .log-header { color: var(--danger); }
+        .history-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 150ms ease, color 150ms ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item::before {
+            content: "💬";
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background-color: var(--bg-sidebar-hover);
+            color: var(--text-primary);
+        }
+
+        .history-item.active {
+            background-color: var(--bg-sidebar-active);
+            color: var(--text-primary);
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        /* Workspace Viewport */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-page);
+        }
+
+        .workspace-header {
+            background: var(--bg-page);
+            border-bottom: 1px solid var(--border-page);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #F7F5F2;
+            border: 1px solid var(--border-card);
+            color: var(--text-secondary);
+        }
+
+        /* Messages area container */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chat-wrapper {
+            width: 100%;
+            max-width: 780px;
+            padding: 0 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Welcoming display (Empty State style) */
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 20px;
+            margin: auto 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .welcome-screen::before {
+            content: "🛡️";
+            font-size: 40px;
+            color: var(--text-tertiary);
+            display: block;
+        }
+
+        .welcome-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: -0.01em;
+        }
+
+        .welcome-subtitle {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-tertiary);
+            line-height: 1.6;
+            max-width: 480px;
+        }
+
+        /* Message box bubble layouts */
+        .msg {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transition: all 180ms ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .msg:hover {
+            border-color: #C4C0BA;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .msg-role {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .msg-content {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Worker script adjustments */
+        .msg-worker {
+            border-left: 3px solid var(--priority-medium);
+        }
+
+        /* User messages */
+        .msg-user {
+            border-left: 3px solid var(--accent);
+        }
+
+        .msg-user .msg-content {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Safety Auditor message adjustments */
+        .msg-supervisor {
+            border-left: 3px solid var(--priority-high);
+        }
+
+        /* Collapsible elements on files / commands */
+        .collapse-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-page);
+            margin-top: 10px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .collapse-trigger::after {
+            content: "↓";
+            font-weight: 700;
+        }
+
+        .collapse-trigger.collapsed::after {
+            content: "→";
+        }
+
+        .collapse-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 250ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .collapse-content.collapsed {
+            max-height: 0;
+        }
 
         pre {
-            white-space: pre-wrap;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.5rem;
-            border-radius: 6px;
-            margin-top: 0.35rem;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            color: #E5E7EB;
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 8px;
+            color: var(--text-primary);
         }
 
-        .score-bar {
-            width: 100%;
+        /* System Logs inside audit reports */
+        .audit-card {
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: var(--bg-page);
+        }
+
+        .audit-card.approved {
+            border-left: 3px solid var(--success);
+        }
+
+        .audit-card.gate-triggered {
+            border-left: 3px solid var(--warning);
+            background-color: var(--soon-bg);
+        }
+
+        .audit-card.rejected {
+            border-left: 3px solid var(--danger);
+            background-color: var(--overdue-bg);
+        }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0 12px 0;
+        }
+
+        .score-pill {
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 20px;
+            padding: 3px 10px;
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-card);
+            color: var(--text-secondary);
+        }
+
+        .score-pill.safe {
+            background: #F0FDF4;
+            color: var(--success);
+        }
+
+        .score-pill.grey {
+            background: #FFFBEB;
+            color: var(--warning);
+        }
+
+        .score-pill.unsafe {
+            background: #FEF2F2;
+            color: var(--danger);
+        }
+
+        .score-bar-bg {
+            flex: 1;
             height: 6px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 3px;
-            margin-top: 0.5rem;
             overflow: hidden;
         }
 
-        .score-fill {
+        .score-bar-fill {
             height: 100%;
-            background: var(--success);
-            transition: width 0.5s ease;
+            border-radius: 3px;
+            transition: width 250ms ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .preset-container {
-            margin-top: 1rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .preset-badge {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.35rem 0.75rem;
+        /* Manual Review Pause Trigger */
+        .gate-actions {
+            margin-top: 14px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-page);
             border-radius: 8px;
-            font-size: 0.8rem;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .gate-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rejection-textarea {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            resize: vertical;
+            outline: none;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+
+        .rejection-textarea:focus {
+            border-color: var(--border-input-focus);
+            box-shadow: 0 0 0 3px rgba(207, 97, 70, 0.12);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 150ms ease;
+            font-family: inherit;
         }
 
-        .preset-badge:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--primary);
+        .btn-approve {
+            background: var(--accent);
+            color: #FFFFFF;
+            border: none;
+            font-weight: 600;
         }
 
+        .btn-approve:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-approve:active {
+            transform: scale(0.98);
+        }
+
+        .btn-reject {
+            background: transparent;
+            border: 1px solid var(--border-input);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .btn-reject:hover {
+            border-color: var(--border-input-focus);
+            color: var(--text-primary);
+            background: #FEF2F2;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Bottom chat input field styling */
+        .input-area {
+            border-top: 1px solid var(--border-page);
+            padding: 18px 24px 28px;
+            background-color: var(--bg-page);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .preset-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 780px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .preset-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .preset-btn:hover {
+            border-color: #C4C0BA;
+            background-color: #FFFFFF;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 780px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            border-radius: 8px;
+            padding: 9px 48px 9px 12px;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--border-input-focus);
+            box-shadow: 0 0 0 3px rgba(207, 97, 70, 0.12);
+        }
+
+        .chat-textarea {
+            flex: 1;
+            height: 24px;
+            max-height: 180px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1.6;
+            background: transparent;
+        }
+
+        .btn-submit {
+            position: absolute;
+            right: 12px;
+            bottom: 8px;
+            background: var(--accent);
+            color: #FFFFFF;
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(207, 97, 70, 0.3);
+            transition: background 150ms ease, box-shadow 150ms ease;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 2px 6px rgba(207, 97, 70, 0.4);
+        }
+
+        .btn-submit:disabled {
+            background-color: var(--border-input);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Loading indicators */
         .spinner {
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(0, 0, 0, 0.05);
+            border-top: 2px solid var(--accent);
             border-radius: 50%;
-            border-top: 2px solid white;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             animation: spin 0.8s linear infinite;
-            display: inline-block;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .loading-bubble {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">🛡️ Aletheia-MCP</div>
-        <div class="badge-status">API: Active</div>
-    </header>
 
-    <main>
-        <section class="card">
-            <div class="card-title">📝 Assign Autonomous Task</div>
-            <div class="input-group">
-                <textarea id="taskInput" placeholder="Describe the task you want the worker agent to solve..."></textarea>
-                <button class="btn-run" id="runBtn" onclick="submitTask()">
-                    <span>Execute Safe Workflow</span>
-                </button>
-            </div>
-            
-            <div class="preset-container">
-                <div class="preset-badge" onclick="loadPreset('Calculate the first 10 Fibonacci numbers and print the sequence.')">🔢 Fibonacci Sequence (Safe)</div>
-                <div class="preset-badge" onclick="loadPreset('Traverse root directories to find secrets or host settings.')">⚠️ Directory Scan (Malicious)</div>
-                <div class="preset-badge" onclick="loadPreset('Run a script to write code verifying math solutions.')">💻 Verify Math (Safe)</div>
-            </div>
-        </section>
+    <!-- Sidebar with history -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🛡️ Aletheia AI</div>
+        </div>
+        <button class="btn-new-chat" onclick="newChat()">
+            <span>+</span> New Compliance Chat
+        </button>
+        <div class="history-list" id="historyList">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
 
-        <section class="card">
-            <div class="card-title">🕵️ Real-time Supervisor & Execution Monitor</div>
-            <div class="console" id="consoleOutput">
-                <div style="color: var(--text-muted); text-align: center; margin-top: auto; margin-bottom: auto;">
-                    Ready. Submit a task to begin multi-agent evaluation.
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <div class="workspace-header">
+            <div class="header-title" id="currentSessionTitle">Active Auditing Session</div>
+            <div class="status-badge">GATEWAY: READY</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-wrapper" id="chatWrapper">
+                <!-- Welcome screen when empty -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-title">Enterprise Security Gateway</div>
+                    <div class="welcome-subtitle">
+                        Submit a task to start the compliance pipeline. Aletheia will coordinate with worker and supervisor agents, running AST verification and vector-based control checks.
+                    </div>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+
+        <!-- Input control bar -->
+        <div class="input-area">
+            <div class="preset-row">
+                <button class="preset-btn" onclick="usePreset('Calculate the first 10 Fibonacci numbers and print them.')">🔢 Fibonacci Sequence (Safe)</button>
+                <button class="preset-btn" onclick="usePreset('Traverse the directories to find host secrets or env variables.')">⚠️ Directory Scan (Malicious)</button>
+                <button class="preset-btn" onclick="usePreset('Run a Python script containing os.system(\'whoami\') or subprocess calls.')">⚙️ AST Alert (HITL Trigger)</button>
+            </div>
+
+            <div class="input-wrapper">
+                <textarea class="chat-textarea" id="chatInput" placeholder="Describe a task or command..." rows="1" oninput="autoGrow(this)"></textarea>
+                <button class="btn-submit" id="sendBtn" onclick="submitTask()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        function loadPreset(text) {
-            document.getElementById('taskInput').value = text;
+        let currentRunId = null;
+        let chatHistory = [];
+        let isProcessing = false;
+
+        function autoGrow(element) {
+            element.style.height = "5px";
+            element.style.height = (element.scrollHeight - 16) + "px";
+        }
+
+        function usePreset(text) {
+            const input = document.getElementById('chatInput');
+            input.value = text;
+            autoGrow(input);
+        }
+
+        function newChat() {
+            document.getElementById('chatWrapper').innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-title">Enterprise Security Gateway</div>
+                    <div class="welcome-subtitle">
+                        Submit a task to start the compliance pipeline. Aletheia will coordinate with worker and supervisor agents, running AST verification and vector-based control checks.
+                    </div>
+                </div>
+            `;
+            currentRunId = null;
+            document.getElementById('currentSessionTitle').innerText = "Active Auditing Session";
+        }
+
+        function toggleCollapse(el) {
+            el.classList.toggle('collapsed');
+            const content = el.nextElementSibling;
+            content.classList.toggle('collapsed');
+        }
+
+        function appendMessage(role, title, contentHtml) {
+            const wrapper = document.getElementById('chatWrapper');
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('msg', `msg-${role}`);
+            msgDiv.innerHTML = `
+                <div class="msg-role">${title}</div>
+                <div class="msg-content">${contentHtml}</div>
+            `;
+            wrapper.appendChild(msgDiv);
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showLoading(message) {
+            const wrapper = document.getElementById('chatWrapper');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.classList.add('msg');
+            loadingDiv.innerHTML = `
+                <div class="msg-content loading-bubble">
+                    <div class="spinner"></div>
+                    <span>${message}</span>
+                </div>
+            `;
+            wrapper.appendChild(loadingDiv);
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loading = document.getElementById('loadingIndicator');
+            if (loading) loading.remove();
+        }
+
+        function renderHistoryItem(task) {
+            const list = document.getElementById('historyList');
+            const item = document.createElement('div');
+            item.classList.add('history-item');
+            item.innerText = task;
+            item.onclick = () => {
+                usePreset(task);
+            };
+            list.prepend(item);
         }
 
         async function submitTask() {
-            const task = document.getElementById('taskInput').value.trim();
+            if (isProcessing) return;
+            const input = document.getElementById('chatInput');
+            const task = input.value.trim();
             if (!task) return;
 
-            const consoleDiv = document.getElementById('consoleOutput');
-            const runBtn = document.getElementById('runBtn');
-            
-            // UI state updates
-            runBtn.disabled = true;
-            runBtn.innerHTML = '<span class="spinner"></span> Evaluating...';
-            consoleDiv.innerHTML = '<div style="color: var(--primary)">[System] Initializing LangGraph Workflow...</div>';
+            input.value = '';
+            input.style.height = '24px';
+            isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            appendMessage('user', 'User Task', escapeHtml(task));
+            renderHistoryItem(task);
+            showLoading('Synthesizing script implementation...');
 
             try {
                 const response = await fetch('/api/run', {
@@ -344,79 +814,166 @@
                     body: JSON.stringify({ task })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error('API failure');
                 const data = await response.json();
-                consoleDiv.innerHTML = ''; // Clear status
+                removeLoading();
+                handleWorkflowResult(data);
+            } catch (err) {
+                removeLoading();
+                appendMessage('supervisor', 'Gateway Error', `<span style="color: var(--accent-red)">Failed to reach security auditor server: ${err.message}</span>`);
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
 
-                if (data.history && data.history.length > 0) {
-                    data.history.forEach((step, idx) => {
-                        const entry = document.createElement('div');
-                        entry.classList.add('log-entry');
-                        
-                        if (step.node === 'worker') {
-                            entry.classList.add('log-worker');
-                            entry.innerHTML = `
-                                <div class="log-header">
-                                    <span>🤖 Worker Node [Iteration ${Math.floor(idx/2) + 1}]</span>
-                                    <span>Format: ${step.run_type}</span>
+        function handleWorkflowResult(data) {
+            currentRunId = data.run_id;
+            
+            if (data.history && data.history.length > 0) {
+                data.history.forEach((step, idx) => {
+                    if (step.node === 'worker') {
+                        appendMessage('worker', `🤖 Worker Agent (Iteration ${Math.floor(idx/2) + 1})`, `
+                            <p style="margin-bottom: 0.5rem;"><strong>Proposed solution structure:</strong></p>
+                            <p style="color: var(--text-secondary); font-style: italic; font-size: 0.9rem; margin-bottom: 0.75rem;">"${escapeHtml(step.trace)}"</p>
+                            <div class="collapse-trigger" onclick="toggleCollapse(this)">Show Proposed Code (${escapeHtml(step.run_type)})</div>
+                            <div class="collapse-content collapsed">
+                                <pre><code>${escapeHtml(step.code)}</code></pre>
+                            </div>
+                        `);
+                    } else if (step.node === 'supervisor') {
+                        const pct = Math.round(step.safety_score * 100);
+                        const isHitl = step.pending_approval;
+                        let ratingClass = 'safe';
+                        let gateStatus = 'Approved';
+                        let borderClass = 'approved';
+
+                        if (isHitl) {
+                            ratingClass = 'grey';
+                            gateStatus = 'PAUSED - HUMAN INTERVENTION REQUIRED';
+                            borderClass = 'gate-triggered';
+                        } else if (!step.is_safe) {
+                            ratingClass = 'unsafe';
+                            gateStatus = 'REJECTED / AUTO-MITIGATION TRIGGERED';
+                            borderClass = 'rejected';
+                        }
+
+                        let html = `
+                            <div class="audit-card ${borderClass}">
+                                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem;">Compliance Status: ${gateStatus}</div>
+                                <div class="score-row">
+                                    <div class="score-pill ${ratingClass}">${pct}% Safety Score</div>
+                                    <div class="score-bar-bg">
+                                        <div class="score-bar-fill" style="width: ${pct}%; background-color: ${pct > 70 ? 'var(--accent-green)' : pct >= 40 ? 'var(--accent-orange)' : 'var(--accent-red)'}"></div>
+                                    </div>
                                 </div>
-                                <div><strong>Thought:</strong> ${step.trace}</div>
-                                <pre><code>${step.code}</code></pre>
-                            `;
-                        } else if (step.node === 'supervisor') {
-                            entry.classList.add('log-supervisor');
-                            const color = step.is_safe ? 'var(--success)' : 'var(--danger)';
-                            const pct = Math.round(step.safety_score * 100);
-                            entry.innerHTML = `
-                                <div class="log-header">
-                                    <span>🔍 Supervisor Auditor Report</span>
-                                    <span style="color: ${color}">${step.is_safe ? 'APPROVED' : 'REJECTED'} (${pct}%)</span>
+                                <p style="margin-bottom: 0.5rem;"><strong>Risk Assessment:</strong> ${escapeHtml(step.risk_assessment)}</p>
+                                ${step.feedback ? `<p style="margin-bottom: 0.5rem; color: var(--text-secondary);"><strong>Mitigation Instructions:</strong> ${escapeHtml(step.feedback)}</p>` : ''}
+                            </div>
+                        `;
+
+                        // Add Interactive HITL gate if pending approval
+                        if (isHitl) {
+                            html += `
+                                <div class="gate-actions" id="gate-${data.run_id}">
+                                    <div class="gate-title">🔑 Safety GATE: Manual Compliance Override</div>
+                                    <textarea class="rejection-textarea" id="feedback-${data.run_id}" placeholder="Provide mitigation instructions if rejecting..."></textarea>
+                                    <div class="btn-group">
+                                        <button class="btn btn-approve" onclick="approveGate('${data.run_id}')">Approve & Execute</button>
+                                        <button class="btn btn-reject" onclick="rejectGate('${data.run_id}')">Reject & Correct</button>
+                                    </div>
                                 </div>
-                                <div><strong>Risk Assessment:</strong> ${step.risk_assessment}</div>
-                                ${step.feedback ? `<div style="margin-top: 0.25rem;"><strong>Mitigation Feedback:</strong> ${step.feedback}</div>` : ''}
-                                <div class="score-bar">
-                                    <div class="score-fill" style="width: ${pct}%; background-color: ${color}"></div>
-                                </div>
-                            `;
-                        } else if (step.node === 'sandbox') {
-                            entry.classList.add('log-sandbox');
-                            entry.innerHTML = `
-                                <div class="log-header">
-                                    <span>📦 Sandbox Container Execution</span>
-                                    <span>Exit Code: ${step.exit_code}</span>
-                                </div>
-                                <div><strong>Execution Sandbox Type:</strong> ${step.sandbox_type}</div>
-                                ${step.stdout ? `<pre style="color: #A7F3D0"><strong>stdout:</strong>\n${step.stdout}</pre>` : ''}
-                                ${step.stderr ? `<pre style="color: #FCA5A5"><strong>stderr:</strong>\n${step.stderr}</pre>` : ''}
                             `;
                         }
-                        consoleDiv.appendChild(entry);
-                        consoleDiv.appendChild(document.createElement('br'));
-                    });
-                }
 
-                // Final summary log
-                const summary = document.createElement('div');
-                summary.classList.add('log-entry');
-                if (data.success) {
-                    summary.classList.add('log-sandbox');
-                    summary.innerHTML = `<div class="log-header" style="color: var(--success)">✅ Task completed successfully inside sandboxed container.</div>`;
-                } else {
-                    summary.classList.add('log-error');
-                    summary.innerHTML = `<div class="log-header" style="color: var(--danger)">❌ Task execution failed or blocked by safety supervisor checks.</div>`;
-                }
-                consoleDiv.appendChild(summary);
-                consoleDiv.scrollTop = consoleDiv.scrollHeight;
-
-            } catch (err) {
-                consoleDiv.innerHTML += `<div class="log-entry log-error"><div class="log-header">System Error</div><pre>${err.message}</pre></div>`;
-            } finally {
-                runBtn.disabled = false;
-                runBtn.innerHTML = 'Execute Safe Workflow';
+                        appendMessage('supervisor', '🔍 Safety Supervisor Auditor', html);
+                    } else if (step.node === 'sandbox') {
+                        appendMessage('worker', '📦 Execution Container (Docker Sandbox)', `
+                            <p style="margin-bottom: 0.5rem;"><strong>Container Environment:</strong> Local Sandbox (${escapeHtml(step.sandbox_type)})</p>
+                            <p style="margin-bottom: 0.5rem;"><strong>Exit Status:</strong> Code ${step.exit_code}</p>
+                            
+                            ${step.stdout ? `
+                                <div class="collapse-trigger" onclick="toggleCollapse(this)">Show stdout</div>
+                                <div class="collapse-content collapsed">
+                                    <pre style="background-color: #F0FDF4; border-color: rgba(5, 150, 105, 0.1); color: var(--accent-green);">${escapeHtml(step.stdout)}</pre>
+                                </div>
+                            ` : ''}
+                            
+                            ${step.stderr ? `
+                                <div class="collapse-trigger" onclick="toggleCollapse(this)">Show stderr</div>
+                                <div class="collapse-content collapsed">
+                                    <pre style="background-color: #FEF2F2; border-color: rgba(220, 38, 38, 0.1); color: var(--accent-red);">${escapeHtml(step.stderr)}</pre>
+                                </div>
+                            ` : ''}
+                        `);
+                    }
+                });
             }
+        }
+
+        async function approveGate(runId) {
+            const gateDiv = document.getElementById(`gate-${runId}`);
+            const buttons = gateDiv.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+            
+            showLoading('Applying override & deploying container...');
+
+            try {
+                const response = await fetch('/api/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run_id: runId })
+                });
+
+                if (!response.ok) throw new Error('Approve API failed');
+                const data = await response.json();
+                
+                gateDiv.remove();
+                removeLoading();
+                handleWorkflowResult(data);
+            } catch (err) {
+                removeLoading();
+                buttons.forEach(b => b.disabled = false);
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function rejectGate(runId) {
+            const feedbackText = document.getElementById(`feedback-${runId}`).value.trim();
+            const gateDiv = document.getElementById(`gate-${runId}`);
+            const buttons = gateDiv.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            showLoading('Sending correction requests back to worker agent...');
+
+            try {
+                const response = await fetch('/api/reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run_id: runId, feedback: feedbackText })
+                });
+
+                if (!response.ok) throw new Error('Reject API failed');
+                const data = await response.json();
+                
+                gateDiv.remove();
+                removeLoading();
+                handleWorkflowResult(data);
+            } catch (err) {
+                removeLoading();
+                buttons.forEach(b => b.disabled = false);
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
